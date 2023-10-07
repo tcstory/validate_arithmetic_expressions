@@ -1,8 +1,10 @@
 package validate_arithmetic_expressions
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 )
 
 type Token struct {
@@ -43,4 +45,55 @@ func parse(input string) []Token {
 	}
 
 	return list
+}
+
+func next(tokenList []Token) ([]Token, *Token) {
+	if len(tokenList) > 0 {
+		var first = tokenList[0]
+		return slices.Delete(tokenList, 0, 1), &first
+	} else {
+		return []Token{}, nil
+	}
+}
+
+func prepend(tokenList []Token, token *Token) []Token {
+	return append([]Token{*token}, tokenList...)
+}
+
+type Result struct {
+	value string
+}
+
+func Validate(input string) (Result, error) {
+	var tokenList = parse(input)
+	var run func(tokenList []Token) (Result, error)
+
+	run = func(tokenList []Token) (Result, error) {
+
+		if len(tokenList) == 0 {
+			return Result{
+				value: "success",
+			}, nil
+		} else if len(tokenList) == 1 {
+			if tokenList[0].label == "operand" {
+				return Result{
+					value: "success",
+				}, nil
+			} else {
+				return Result{}, errors.New("wrong label type")
+			}
+		} else {
+			tokenList, operand1 := next(tokenList)
+			tokenList, operator := next(tokenList)
+			tokenList, operand2 := next(tokenList)
+
+			if operand1.label == "operand" && operator.label == "operator" && operand2.label == "operand" {
+				return run(prepend(tokenList, &Token{label: "operand", value: ""}))
+			} else {
+				return Result{}, errors.New("invalid expression")
+			}
+		}
+	}
+
+	return run(tokenList)
 }
