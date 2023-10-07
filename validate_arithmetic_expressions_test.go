@@ -48,6 +48,23 @@ func TestParse(t *testing.T) {
 		t.Fatalf("error found")
 	}
 
+	if !reflect.DeepEqual(parse("()"), []Token{
+		{label: "leftParenthesis", value: "("},
+		{label: "rightParenthesis", value: ")"},
+	}) {
+		t.Fatalf("error found")
+	}
+
+	if !reflect.DeepEqual(parse("(2+3)"), []Token{
+		{label: "leftParenthesis", value: "("},
+		{label: "operand", value: "2"},
+		{label: "operator", value: "+"},
+		{label: "operand", value: "3"},
+		{label: "rightParenthesis", value: ")"},
+	}) {
+		t.Fatalf("error found")
+	}
+
 	if !reflect.DeepEqual(parse("1*(2+3)"), []Token{
 		{label: "operand", value: "1"},
 		{label: "operator", value: "*"},
@@ -136,16 +153,63 @@ func TestValidate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = Validate("1+2/3")
+	_, err = Validate("1+2+3")
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = Validate("")
+	_, err = Validate("(1+2)")
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	_, err = Validate("(1+2)+3")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = Validate("1+(2+3)")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = Validate("1+(2+(3+4))")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = Validate("((1+2)+3)")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = Validate("((1+2)+3)+4")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = Validate("(1+2")
+
+	if err == nil {
+		t.Fatal(err)
+	}
+
+	_, err = Validate("1+2)")
+
+	if err == nil {
+		t.Fatal(err)
+	}
+
+	_, err = Validate("(1+(2)")
+
+	if err == nil {
+		t.Fatal(err)
+	}
 }
